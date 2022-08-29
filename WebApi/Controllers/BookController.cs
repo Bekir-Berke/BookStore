@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using WebApi.DbOperations;
+using WebApi.BookOperations;
 namespace WebApi.AddControllers
 {
     [ApiController]
@@ -14,10 +16,11 @@ namespace WebApi.AddControllers
             _context = context;
         }
         [HttpGet]
-        public List<Book> GetBooks()
+        public IActionResult GetBooks()
         {
-            var bookList = _context.Books.OrderBy(b => b.Id).ToList<Book>();
-            return bookList;
+            GetBooksQuery query = new GetBooksQuery(_context);
+            var result = query.Handle();
+            return Ok(result);
         }
         [HttpGet("{id}")]
         public Book GetById (int id){
@@ -25,13 +28,10 @@ namespace WebApi.AddControllers
             return book;
         }
         [HttpPost]
-        public IActionResult AddBook ([FromBody] Book newBook){
-            var book = _context.Books.SingleOrDefault(b => b.Title == newBook.Title);
-            if(book is not null){
-                return BadRequest();
-            }
-            _context.Books.Add(newBook);
-            _context.SaveChanges();
+        public IActionResult AddBook ([FromBody] CreateBookModel model){
+            CreateBook command = new CreateBook(_context);
+            command.Model = model;
+            command.Handle();
             return Ok();
         }
         [HttpPut("{id}")]
