@@ -23,29 +23,45 @@ namespace WebApi.AddControllers
             return Ok(result);
         }
         [HttpGet("{id}")]
-        public Book GetById (int id){
-            var book = _context.Books.Where(b => b.Id == id).SingleOrDefault();
-            return book;
+        public IActionResult GetById (int id){
+            GetBookByIdQuery query = new GetBookByIdQuery(_context);
+            try
+            {
+                var result = query.Handle(id);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
         [HttpPost]
         public IActionResult AddBook ([FromBody] CreateBookModel model){
             CreateBook command = new CreateBook(_context);
-            command.Model = model;
-            command.Handle();
-            return Ok();
+            try
+            {
+                command.Model = model;
+                command.Handle();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
         [HttpPut("{id}")]
-        public IActionResult UpdateBook(int id, [FromBody] Book updateBook){
-            var book = _context.Books.SingleOrDefault(b => b.Id == updateBook.Id);
-            if(book is null){
-                return NotFound();
+        public IActionResult UpdateBook(int id, [FromBody] UpdateBookModel model){
+            UpdateBook command = new UpdateBook(_context);
+            try
+            {
+                command.Model = model;
+                command.Handle(id);
+                return Ok();
             }
-            book.GenreId = updateBook.GenreId != default ? updateBook.GenreId : book.GenreId;
-            book.PageCount = updateBook.PageCount != default ? updateBook.PageCount : book.PageCount;
-            book.PublishDate = updateBook.PublishDate != default ? updateBook.PublishDate : book.PublishDate;
-            book.Title = updateBook.Title != default ? updateBook.Title : book.Title;
-            _context.SaveChanges();
-            return Ok();
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
         [HttpDelete("{id}")]
 
